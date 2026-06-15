@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мой MP3 Плеер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .player {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cover {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .cover-icon {
+            font-size: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 120px;
+            height: 120px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .song-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .song-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .song-artist {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .progress-area {
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: white;
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .time {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .controls button {
+            background: white;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls button:active {
+            transform: scale(0.95);
+        }
+
+        .controls button:nth-child(2) {
+            width: 65px;
+            height: 65px;
+            font-size: 28px;
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .playlist {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 25px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .playlist-title {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .playlist-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .playlist-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .playlist-item.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .playlist-name {
+            color: white;
+            font-size: 14px;
+        }
+
+        .playlist-duration {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+
+        .playlist::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .playlist::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .volume-icon {
+            color: white;
+            font-size: 18px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="player">
+        <div class="cover">
+            <div class="cover-icon">
+                🎵
+            </div>
+        </div>
+
+        <div class="song-info">
+            <div class="song-title" id="songTitle">Выберите трек</div>
+            <div class="song-artist" id="songArtist">MP3 Плеер</div>
+        </div>
+
+        <div class="progress-area">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div class="time">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn">⏮</button>
+            <button id="playBtn">▶</button>
+            <button id="nextBtn">⏭</button>
+        </div>
+
+        <div class="volume-control">
+            <span class="volume-icon">🔊</span>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70">
+        </div>
+
+        <div class="playlist">
+            <div class="playlist-title">📋 Плейлист</div>
+            <div id="playlistContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🎵 СПИСОК ТВОИХ ПЕСЕН (ДОБАВЬ СВОИ!)
+        // Положи MP3 файлы в папку "music" рядом с index.html
+        const tracks = [
+            { name: "Трек 1", artist: "Исполнитель", file: "music/track1.mp3" },
+            { name: "Трек 2", artist: "Исполнитель", file: "music/track2.mp3" },
+            { name: "Трек 3", artist: "Исполнитель", file: "music/track3.mp3" }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        let audio = new Audio();
+
+        // DOM элементы
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const songTitle = document.getElementById('songTitle');
+        const songArtist = document.getElementById('songArtist');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const durationSpan = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const playlistContainer = document.getElementById('playlistContainer');
+
+        // Загрузка трека
+        function loadTrack(index) {
+            if (index >= 0 && index < tracks.length) {
+                currentTrackIndex = index;
+                const track = tracks[currentTrackIndex];
+                audio.src = track.file;
+                songTitle.textContent = track.name;
+                songArtist.textContent = track.artist;
+                
+                // Обновляем активный элемент в плейлисте
+                updatePlaylistActive();
+                
+                // Сбрасываем прогресс
+                progress.style.width = '0%';
+                currentTimeSpan.textContent = '0:00';
+                
+                if (isPlaying) {
+                    audio.play().catch(e => console.log('Ошибка воспроизведения:', e));
+                }
+            }
+        }
+
+        // Форматирование времени
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' + secs : secs}`;
+        }
+
+        // Обновление прогресса
+        function updateProgress() {
+            if (audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = percent + '%';
+                currentTimeSpan.textContent = formatTime(audio.currentTime);
+                durationSpan.textContent = formatTime(audio.duration);
+            }
+        }
+
+        // Клик по прогресс-бару
+        function setProgress(e) {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        }
+
+        // Следующий трек
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) audio.play();
+        }
+
+        // Предыдущий трек
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) audio.play();
+        }
+
+        // Play/Pause
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                playBtn.textContent = '▶';
+                playBtn.style.background = 'white';
+                playBtn.style.color = 'black';
+            } else {
+                audio.play().catch(e => {
+                    console.log('Ошибка:', e);
+                    alert('Не удалось воспроизвести файл. Проверь, есть ли MP3 в папке music');
+                });
+                playBtn.textContent = '⏸';
+                playBtn.style.background = '#ff6b6b';
+                playBtn.style.color = 'white';
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // Окончание трека
+        function onTrackEnd() {
+            nextTrack();
+        }
+
+        // Громкость
+        function setVolume() {
+            audio.volume = volumeSlider.value / 100;
+        }
+
+        // Создание плейлиста
+        function buildPlaylist() {
+            playlistContainer.innerHTML = '';
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                if (index === currentTrackIndex) item.classList.add('active');
+                item.innerHTML = `
+                    <span class="playlist-name">${track.name}</span>
+                    <span class="playlist-duration">${track.artist}</span>
+                `;
+                item.onclick = () => {
+                    currentTrackIndex = index;
+                    loadTrack(currentTrackIndex);
+                    if (isPlaying) {
+                        audio.play();
+                    } else {
+                        togglePlay();
+                    }
+                };
+                playlistContainer.appendChild(item);
+            });
+        }
+
+        function updatePlaylistActive() {
+            const items = document.querySelectorAll('.playlist-item');
+            items.forEach((item, index) => {
+                if (index === currentTrackIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // Обработчики событий
+        playBtn.addEventListener('click', togglePlay);
+        prevBtn.addEventListener('click', prevTrack);
+        nextBtn.addEventListener('click', nextTrack);
+        progressBar.addEventListener('click', setProgress);
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', onTrackEnd);
+        audio.addEventListener('loadedmetadata', () => {
+            durationSpan.textContent = formatTime(audio.duration);
+        });
+        volumeSlider.addEventListener('input', setVolume);
+
+        // Инициализация
+        buildPlaylist();
+        audio.volume = 0.7;
+        
+        // Пробуем загрузить первый трек
+        if (tracks.length > 0) {
+            loadTrack(0);
+        }
+    </script>
+</body>
+</html>
